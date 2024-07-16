@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/fx_deals
+      - SPRING_DATASOURCE_USERNAME=fx_user
+      - SPRING_DATASOURCE_PASSWORD=123
+    networks:
+      - springboot-mysql-network
+  mysqldb:
+    image: mysql:latest
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_DATABASE=fx_deals
+      - MYSQL_ROOT_PASSWORD=123
+    volumes:
+      - mysql-data-1:/var/lib/mysql
+      - "./scripts/db.sql:/docker-entrypoint-initdb.d/1.sql"
+    networks:
+      - springboot-mysql-network
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      retries: 10
+      interval: 3s
+      timeout: 30s
+volumes:
+  mysql-data-1:
+networks:
+  springboot-mysql-network:
+    name: springboot-mysql-network
